@@ -1,5 +1,6 @@
 package cn.com.sun.ksv.util;
 
+import cn.com.sun.ksv.crawler.CrawlerConfig;
 import ws.schild.jave.process.ProcessLocator;
 
 /**
@@ -10,6 +11,6 @@ import ws.schild.jave.process.ProcessLocator;
 public class CustomLocator implements ProcessLocator {
     @Override
     public String getExecutablePath() {
-        return "D:\\Program\\tools\\ffmpeg\\bin\\ffmpeg.exe";
+        return CrawlerConfig.getProperties("rootDir") + "\\ffmpeg\\ffmpeg.exe";
     }
 }

@@ -55,7 +55,8 @@ public class ShortVideoCrawler implements VideoCrawler {
         initWebDriver();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         this.date = dateFormat.format(new Date());
-        this.outputDir = new File(CrawlerConfig.getProperties("outputDir") + File.separator + date);
+        String path = CrawlerConfig.getProperties("rootDir") + "//output" + File.separator + date;
+        this.outputDir = new File(path);
         if (!outputDir.exists()) {
             outputDir.mkdirs();
         }

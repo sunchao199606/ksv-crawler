@@ -17,12 +17,13 @@ import java.util.regex.Pattern;
 public class CrawlerRunner {
 
     public static void main(String[] args) throws IOException {
-        String path = CrawlerConfig.getProperties("inputText");
+        String path = CrawlerConfig.getProperties("rootDir") + "//input.txt";
         ShortVideoCrawler crawler = new ShortVideoCrawler(getUrlList(path));
         crawler.parseDownloadUrl().download().processVideo();
     }
 
     private static List<String> getUrlList(String path) throws IOException {
+        System.out.println(path);
         File file = new File(path);
         BufferedReader reader = new BufferedReader(new FileReader(file));
         StringBuilder stringBuilder = new StringBuilder();

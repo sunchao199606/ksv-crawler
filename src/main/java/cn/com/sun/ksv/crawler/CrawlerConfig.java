@@ -20,7 +20,10 @@ public class CrawlerConfig {
     static {
         properties = new Properties();
         try {
-            properties.load(new FileInputStream(new File(CrawlerConfig.class.getResource("config.properties").getPath())));
+            File startDir = new File(System.getProperty("user.dir"));
+            logger.info(startDir.getAbsolutePath());
+            File configDir = new File(startDir, "config");
+            properties.load(new FileInputStream(configDir.getAbsolutePath() + "//config.properties"));
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }

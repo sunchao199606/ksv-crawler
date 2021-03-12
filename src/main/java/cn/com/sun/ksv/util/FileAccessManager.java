@@ -55,7 +55,7 @@ public class FileAccessManager {
 
     public static FileAccessManager getInstance() {
         if (instance == null) {
-            instance = new FileAccessManager(new File(CrawlerConfig.getProperties("rootDir")+"//crawler.json"));
+            instance = new FileAccessManager(new File(CrawlerConfig.getProperties("rootDir")+"//log//crawler.json"));
         }
         return instance;
     }
