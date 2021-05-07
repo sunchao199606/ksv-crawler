@@ -21,7 +21,6 @@ task release() {
     dependsOn('jar')
     dependsOn('copyConfig')
     dependsOn('copyFfmpeg')
-    dependsOn('copyWebDriver')
     dependsOn('copyBat')
     dependsOn('copyJre')
     dependsOn('copyJar')
@@ -44,8 +43,8 @@ task copyJar(type: Copy) {
     into("${releaseDir}/jar")
 }
 task copyJre(type: Copy) {
-    from('jre')
-    into("${releaseDir}/jre")
+    from('jdk64')
+    into("${releaseDir}/jdk64")
 }
 task copyBat(type: Copy) {
     from('crawler.bat')

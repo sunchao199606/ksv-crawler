@@ -215,6 +215,7 @@ public class ShortVideoCrawler implements VideoCrawler {
                 Video video = new Video();
                 video.setPath(file.getAbsolutePath());
                 successVideoList.add(video);
+                logger.info("add video {}", video.getPath());
             }
             outputDir = dir;
         }
@@ -241,12 +242,10 @@ public class ShortVideoCrawler implements VideoCrawler {
                 logger.info("视频{}分辨率修改成功", source.getName());
             }
             //3.编号
-            String fileName = source.getName();
-            if (fileName.length() == 10) {
-                // 英文 修改文件名
-                File target = new File(outputDir + File.separator + (++currentMaxNum) + ".mp4");
-                if (source.renameTo(target)) logger.info("{}重命名为{}", source.getName(), target.getName());
-            }
+            // 英文 修改文件名
+            File target = new File(outputDir + File.separator + (++currentMaxNum) + ".mp4");
+            if (source.renameTo(target)) logger.info("{}重命名为{}", source.getName(), target.getName());
+
         }
     }
 

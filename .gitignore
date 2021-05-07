@@ -1,5 +1,5 @@
 build
 .gradle
 log
-jre
+jdk64
 output
