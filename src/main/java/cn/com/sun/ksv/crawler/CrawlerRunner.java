@@ -19,7 +19,12 @@ public class CrawlerRunner {
     public static void main(String[] args) throws IOException {
         String path = CrawlerConfig.getProperties("rootDir") + "//input.txt";
         ShortVideoCrawler crawler = new ShortVideoCrawler(getUrlList(path));
-        crawler.parseDownloadUrl().download().processVideo();
+        if (args.length > 0 && args[0].equalsIgnoreCase("processOnly")) {
+            String outputPath = CrawlerConfig.getProperties("inputDir");
+            crawler.processVideo(outputPath);
+        } else {
+            crawler.parseDownloadUrl().download().processVideo(null);
+        }
     }
 
     private static List<String> getUrlList(String path) throws IOException {

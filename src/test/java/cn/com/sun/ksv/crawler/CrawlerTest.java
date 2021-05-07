@@ -18,6 +18,6 @@ public class CrawlerTest {
     @Test
     public void process() {
         //String path = CrawlerConfig.getProperties("inputText");
-        new ShortVideoCrawler(null).processVideo();
+        new ShortVideoCrawler(null).processVideo(null);
     }
 }

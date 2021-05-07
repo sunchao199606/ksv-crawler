@@ -29,6 +29,6 @@ public interface VideoCrawler {
 
     VideoCrawler download();
 
-    void processVideo();
+    void processVideo(String path);
 }
 

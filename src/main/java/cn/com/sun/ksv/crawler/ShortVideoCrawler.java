@@ -201,7 +201,23 @@ public class ShortVideoCrawler implements VideoCrawler {
         return this;
     }
 
-    public void processVideo() {
+    /**
+     * 用于兼容处理下载好的视频
+     *
+     * @param path
+     */
+    public void processVideo(String path) {
+        // 兼容直接处理视频
+        if (path != null) {
+            successVideoList.clear();
+            File dir = new File(path);
+            for (File file : dir.listFiles()) {
+                Video video = new Video();
+                video.setPath(file.getAbsolutePath());
+                successVideoList.add(video);
+            }
+            outputDir = dir;
+        }
         // 文件名修改为数字编号
         int currentMaxNum = findMax();
         for (Video video : successVideoList) {
