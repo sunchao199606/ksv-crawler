@@ -16,11 +16,12 @@ jar {
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
-def releaseDir = "$buildDir/release"
+def releaseDir = "$buildDir/release/ksv-crawler"
 task release() {
     dependsOn('jar')
     dependsOn('copyConfig')
     dependsOn('copyFfmpeg')
+    dependsOn('copyWebDriver')
     dependsOn('copyBat')
     dependsOn('copyJre')
     dependsOn('copyJar')
@@ -34,6 +35,10 @@ task copyFfmpeg(type: Copy) {
     from('ffmpeg')
     into("${releaseDir}/ffmpeg")
 }
+task copyWebDriver(type: Copy) {
+    from('webdriver')
+    into("${releaseDir}/webdriver")
+}
 task copyJar(type: Copy) {
     from('build/libs')
     into("${releaseDir}/jar")
@@ -43,7 +48,8 @@ task copyJre(type: Copy) {
     into("${releaseDir}/jre")
 }
 task copyBat(type: Copy) {
-    from('run.bat')
+    from('crawler.bat')
+    from('process.bat')
     from('input.txt')
     into("${releaseDir}")
 }
