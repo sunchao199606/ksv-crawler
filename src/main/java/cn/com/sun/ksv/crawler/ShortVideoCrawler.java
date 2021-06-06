@@ -85,7 +85,7 @@ public class ShortVideoCrawler implements VideoCrawler {
         Map<String, Video> downloadedMap = FileAccessManager.getInstance().read();
         // id title pageUrl
         urlList.stream().forEach(url -> {
-            String id = url.substring(url.length() - 6);
+            String id = url.substring(url.length() - 8, url.length() - 1);
             if (downloadedMap.keySet().contains(id)) {
                 logger.info("filter downloaded video:{}", url);
             } else {
@@ -111,10 +111,27 @@ public class ShortVideoCrawler implements VideoCrawler {
                     logger.error(e.getMessage(), e);
                 }
                 driver.get(video.getUrl());
-                WebElement videoElement = driver.findElement(By.cssSelector("video"));
+                boolean videoPresence = false;
+                WebElement videoElement = null;
+                // 循环获取video
+                do {
+                    try {
+                        videoElement = driver.findElement(By.cssSelector("video"));
+                        videoPresence = true;
+                    } catch (Exception e) {
+                        logger.info("video element not presence find again");
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException interruptedException) {
+                            logger.error(e.getMessage(), e);
+                        }
+                    }
+                } while (!videoPresence);
                 try {
-                    wait.until(attributeToBeNotEmpty(videoElement, "src"));
-                    videoUrl = videoElement.getAttribute("src");
+                    if (videoElement != null) {
+                        wait.until(attributeToBeNotEmpty(videoElement, "src"));
+                        videoUrl = videoElement.getAttribute("src");
+                    }
                 } catch (Exception e) {
                     logger.info("获取视频下载地址失败：{}", video.getUrl());
                 }
@@ -219,29 +236,38 @@ public class ShortVideoCrawler implements VideoCrawler {
             }
             outputDir = dir;
         }
+
         // 文件名修改为数字编号
         int currentMaxNum = findMax();
         for (Video video : successVideoList) {
             File source = new File(video.getPath());
-            MultimediaInfo info = FFMPEG.getVideoInfo(source);
-            float actualDuration = (float) info.getDuration() / 1000f;
-            VideoSize actualSize = info.getVideo().getSize();
-            //1.时长处理
-            if (actualDuration < 12.0f) {
-                float factor = 12.5f / actualDuration;
-                FFMPEG.extend(source, factor);
-                logger.info("视频{}加长成功", source.getName());
-            } else if (actualDuration > 120f) {
-                FFMPEG.cut(source, "00:00:00", "00:00:119");
-                logger.info("视频{}减短成功", source.getName());
-            }
-            //2.分辨率处理
+            //1.分辨率处理
+            MultimediaInfo multimediaInfo = FFMPEG.getVideoInfo(source);
             VideoSize expectSize = new VideoSize(720, 1280);
+            VideoSize actualSize = multimediaInfo.getVideo().getSize();
             if (!expectSize.asEncoderArgument().equals(actualSize.asEncoderArgument())) {
-                FFMPEG.resize(source, expectSize.asEncoderArgument());
+                String tempPath = getTempPath(source);
+                FFMPEG.resize(source.getAbsolutePath(), expectSize.asEncoderArgument(), tempPath);
+                deleteAndRename(source, new File(tempPath));
                 logger.info("视频{}分辨率修改成功", source.getName());
             }
-            //3.编号
+            //2.针对抖音视频去水印去片尾处理
+            processDouyin(source);
+            //3.时长处理
+            MultimediaInfo info = FFMPEG.getVideoInfo(source);
+            float actualDuration = (float) info.getDuration() / 1000f;
+            if (actualDuration < 12.0f) {
+                float factor = 12.5f / actualDuration;
+                FFMPEG.extend(source.getAbsolutePath(), factor, getTempPath(source));
+                deleteAndRename(source, new File(getTempPath(source)));
+                logger.info("视频{}加长成功", source.getName());
+            } else if (actualDuration > 120f) {
+                FFMPEG.cut(source.getAbsolutePath(), "00:00:00", "00:00:119", getTempPath(source));
+                deleteAndRename(source, new File(getTempPath(source)));
+                logger.info("视频{}减短成功", source.getName());
+            }
+
+            //4.编号
             // 英文 修改文件名
             File target = new File(outputDir + File.separator + (++currentMaxNum) + ".mp4");
             if (source.renameTo(target)) logger.info("{}重命名为{}", source.getName(), target.getName());
@@ -260,5 +286,73 @@ public class ShortVideoCrawler implements VideoCrawler {
             }
         }
         return maxNum;
+    }
+
+    public void processDouyin(File source) {
+        MultimediaInfo info = FFMPEG.getVideoInfo(source);
+        String endTime = calEndTime(info.getDuration(), source);
+        try {
+            String first = getPartPath(source, "firstPart");
+            String second = getPartPath(source, "secondPart");
+            String out = getTempPath(source);
+            //2.去除左上角水印
+            FFMPEG.delogoFirstPart(source.getAbsolutePath(), first);
+            //3.去除右下角水印
+            FFMPEG.delogoSecondPart(source.getAbsolutePath(), endTime, second);
+            //4.合并视频
+            FFMPEG.mergeDouYin(first, second, out);
+            deleteAndRename(source, new File(out));
+            if (new File(first).delete() && new File(second).delete()) {
+                logger.info("process douyin video {} success", source.getAbsolutePath());
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    private void deleteAndRename(File source, File temp) {
+        // 重命名文件
+        File target = new File(temp.getAbsolutePath().replace("temp.mp4", ".mp4"));
+        if (source.delete()) {
+            temp.renameTo(target);
+            //logger.info("视频{}修改成功", source.getName());
+        } else
+            logger.error("视频重命名失败");
+    }
+
+    private String getPartPath(File source, String part) {
+        // 获取temp文件
+        String partPath = source.getParent() + File.separator + source.getName().replace(".mp4", part + ".mp4");
+        File temp = new File(partPath);
+        return temp.getAbsolutePath();
+    }
+
+    private String calEndTime(long total, File source) {
+        // 去除片尾
+        long duration = total - 3500l;
+        StringBuilder endTime = new StringBuilder();
+        long mill = duration % 1000;
+        long sec;
+        long min;
+        if (duration >= 60000) {
+            min = duration / 60000;
+            sec = (duration - min * 60000) / 1000;
+            endTime.append(min).append(":").append(sec).append(".").append(mill);
+        } else if (duration < 60000) {
+            min = 0;
+            sec = duration / 1000;
+            endTime.append("00").append(":").append(sec).append(".").append(mill);
+        } else {
+            logger.error("video {} duration over 60 min", source);
+        }
+        return endTime.toString();
+    }
+
+
+    private String getTempPath(File source) {
+        // 获取temp文件
+        String tempPath = source.getParent() + File.separator + source.getName().replace(".mp4", "temp.mp4");
+        File temp = new File(tempPath);
+        return temp.getAbsolutePath();
     }
 }

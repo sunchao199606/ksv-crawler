@@ -52,79 +52,93 @@ public class FFMPEG {
 
     private static ProcessLocator locator = new CustomLocator();
 
-    public static void resizeAndExtend(File source, VideoSize videoSize, float factor) {
-        File temp = getTemp(source);
+    public static void resizeAndExtend(String source, VideoSize videoSize, float factor, String output) {
         List<String> paraList = new ArrayList<>();
         paraList.add("-i");
-        paraList.add(source.getAbsolutePath());
+        paraList.add(source);
         paraList.add("-filter:v");
         paraList.add(String.format("\"setpts=%f*PTS\"", factor));
         paraList.add("-s");
         paraList.add(String.format("%sx%s", videoSize.getWidth(), videoSize.getHeight()));
-        paraList.add(temp.getAbsolutePath());
+        paraList.add(output);
         FFMPEG.execute(paraList);
-        // 处理temp视频
-        deleteAndRename(source, temp);
     }
 
-    public static void resize(File source, String size) {
-        File temp = getTemp(source);
+    public static void resize(String source, String size, String output) {
         List<String> paraList = new ArrayList<>();
         paraList.add("-i");
-        paraList.add(source.getAbsolutePath());
+        paraList.add(source);
         paraList.add("-s");
         paraList.add(size);
-        paraList.add(temp.getAbsolutePath());
+        paraList.add(output);
         FFMPEG.execute(paraList);
-        // 处理temp视频
-        deleteAndRename(source, temp);
     }
 
-    private static void deleteAndRename(File source, File temp) {
-        // 重命名文件
-        File target = new File(temp.getAbsolutePath().replace("temp.mp4", ".mp4"));
-        if (source.delete()) {
-            temp.renameTo(target);
-            //logger.info("视频{}修改成功", source.getName());
-        } else
-            logger.error("视频重命名失败");
-    }
 
-    private static File getTemp(File source) {
-        // 获取temp文件
-        String tempPath = source.getParent() + File.separator + source.getName().replace(".mp4", "temp.mp4");
-        File temp = new File(tempPath);
-        return temp;
-    }
-
-    public static void extend(File source, float factor) {
-        File temp = getTemp(source);
+    public static void extend(String source, float factor, String output) {
         List<String> paraList = new ArrayList<>();
         paraList.add("-i");
-        paraList.add(source.getAbsolutePath());
+        paraList.add(source);
         paraList.add("-filter:v");
         paraList.add(String.format("\"setpts=%f*PTS\"", factor));
-        paraList.add(temp.getAbsolutePath());
+        paraList.add(output);
         FFMPEG.execute(paraList);
-        deleteAndRename(source, temp);
     }
 
-    public static void cut(File source, String start, String end) {
-        File temp = getTemp(source);
+    public static void cut(String source, String start, String end, String out) {
         List<String> paraList = new ArrayList<>();
         paraList.add("-ss");
         paraList.add(start);
         paraList.add("-i");
-        paraList.add(source.getAbsolutePath());
+        paraList.add(source);
         paraList.add("-vcodec");
         paraList.add("copy");
         paraList.add("-acodec");
         paraList.add("copy");
         paraList.add("-t");
         paraList.add(end);
-        paraList.add(temp.getAbsolutePath());
+        paraList.add(out);
         FFMPEG.execute(paraList);
-        deleteAndRename(source, temp);
+    }
+
+    public static void delogoFirstPart(String source, String outputPath) {
+        List<String> paraList = new ArrayList<>();
+        paraList.add("-ss");
+        paraList.add("0:0.000");
+        paraList.add("-to");
+        paraList.add("0:5.000");
+        paraList.add("-i");
+        paraList.add(source);
+        paraList.add("-vf");
+        paraList.add("\"delogo=x=1:y=1:w=250:h=120:show=0\"");
+        paraList.add(outputPath);
+        FFMPEG.execute(paraList);
+    }
+
+    public static void delogoSecondPart(String source, String endTime, String outputPath) {
+        List<String> paraList = new ArrayList<>();
+        paraList.add("-ss");
+        paraList.add("0:5.000");
+        paraList.add("-to");
+        paraList.add(endTime);
+        paraList.add("-i");
+        paraList.add(source);
+        paraList.add("-vf");
+        paraList.add("\"delogo=469:y=1159:w=250:h=120:show=0\"");
+        paraList.add(outputPath);
+        FFMPEG.execute(paraList);
+    }
+
+    public static void mergeDouYin(String firstPath, String secondPath, String outputPath) {
+        List<String> paraList = new ArrayList<>();
+        paraList.add("-i");
+        paraList.add(firstPath);
+        paraList.add("-i");
+        paraList.add(secondPath);
+        paraList.add("-filter_complex");
+        paraList.add("\"[0:v] [0:a] [1:v] [1:a] concat=n=2:v=1:a=1 [v] [a]\" -map \"[v]\" -map \"[a]\"");
+        paraList.add(outputPath);
+        FFMPEG.execute(paraList);
     }
 
     /**
@@ -156,7 +170,7 @@ public class FFMPEG {
                     logger.debug("output:" + line);
                 }
             } catch (IOException e) {
-                logger.error(e.getMessage());
+                logger.error(e.getMessage(), e);
             }
         });
         outputThread.setName("ffmpeg-output-tracker");
@@ -169,7 +183,7 @@ public class FFMPEG {
                     logger.debug("err:" + line);
                 }
             } catch (IOException e) {
-                logger.error(e.getMessage());
+                logger.error(e.getMessage(), e);
             }
         });
         errThread.setName("ffmpeg-err-tracker");

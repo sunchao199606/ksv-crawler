@@ -58,7 +58,7 @@ public class HttpClient {
                 if (response.getStatusLine().getStatusCode() == 200) {
                     IOUtil.copy(in, out);
                 } else {
-                    //logger.error("下载视频失败,地址:{}, cause:response status:{}", videoUrl, response.getStatusLine());
+                    logger.warn("get请求失败,地址:{}, response status:{}", videoUrl, response.getStatusLine().getStatusCode());
                     return false;
                 }
             } catch (IOException e) {
@@ -78,7 +78,7 @@ public class HttpClient {
     private static HttpGet createHttpGetRequest(String url) {
         HttpGet request = new HttpGet(url);
         request.setConfig(requestConfig);
-        request.setHeader("Host", request.getURI().getHost());
+        //request.setHeader("Host", request.getURI().getHost());
         request.setHeader("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7");
         request.setHeader("Accept-Encoding", "gzip");
         request.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) " +
