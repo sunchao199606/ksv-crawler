@@ -14,6 +14,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,6 +65,13 @@ public class FFMPEG {
         FFMPEG.execute(paraList);
     }
 
+    /**
+     * 改变视频分辨率
+     *
+     * @param source
+     * @param size
+     * @param output
+     */
     public static void resize(String source, String size, String output) {
         List<String> paraList = new ArrayList<>();
         paraList.add("-i");
@@ -74,7 +82,33 @@ public class FFMPEG {
         FFMPEG.execute(paraList);
     }
 
+    /**
+     * 获取视频的某一帧
+     *
+     * @param stamps
+     * @param source
+     * @param output
+     */
+    public static void getFrame(String stamps, String source, String output) {
+        List<String> paraList = new ArrayList<>();
+        paraList.add("-ss");
+        paraList.add(stamps);
+        paraList.add("-i");
+        paraList.add(source);
+        paraList.add("-vframes");
+        paraList.add("1");
+        paraList.add(output);
+        FFMPEG.execute(paraList);
+    }
 
+
+    /**
+     * 加长视频
+     *
+     * @param source
+     * @param factor
+     * @param output
+     */
     public static void extend(String source, float factor, String output) {
         List<String> paraList = new ArrayList<>();
         paraList.add("-i");
@@ -85,6 +119,14 @@ public class FFMPEG {
         FFMPEG.execute(paraList);
     }
 
+    /**
+     * 裁剪视频
+     *
+     * @param source
+     * @param start
+     * @param end
+     * @param out
+     */
     public static void cut(String source, String start, String end, String out) {
         List<String> paraList = new ArrayList<>();
         paraList.add("-ss");
@@ -119,8 +161,10 @@ public class FFMPEG {
         List<String> paraList = new ArrayList<>();
         paraList.add("-ss");
         paraList.add("0:5.000");
-        paraList.add("-to");
-        paraList.add(endTime);
+        if (endTime != null && !endTime.isEmpty()) {
+            paraList.add("-to");
+            paraList.add(endTime);
+        }
         paraList.add("-i");
         paraList.add(source);
         paraList.add("-vf");
@@ -204,21 +248,28 @@ public class FFMPEG {
         //执行命令
         ProcessWrapper executor = locator.createExecutor();
         paraList.forEach(parameter -> executor.addArgument(parameter));
-        MultimediaInfo info = null;
+        AtomicReference<MultimediaInfo> info = new AtomicReference<>();
         try {
             executor.execute();
-            try {
-                RBufferedReader reader = new RBufferedReader(new InputStreamReader(executor.getErrorStream()));
-                info = parseMultimediaInfo(source.getAbsolutePath(), reader);
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-            }
+            // 新启一个线程读取
+            Thread thread = new Thread(() -> {
+                try {
+                    RBufferedReader reader = new RBufferedReader(new InputStreamReader(executor.getErrorStream()));
+                    info.set(parseMultimediaInfo(source.getAbsolutePath(), reader));
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                }
+            });
+            thread.setName("ffmpeg-info-reader");
+            thread.start();
+            // 同步等待任务完成
+            executor.getProcessExitCode();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         } finally {
             executor.destroy();
         }
-        return info;
+        return info.get();
     }
 
     private static MultimediaInfo parseMultimediaInfo(String source, RBufferedReader reader)

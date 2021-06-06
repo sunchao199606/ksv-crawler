@@ -4,6 +4,7 @@ import cn.com.sun.ksv.model.Video;
 import cn.com.sun.ksv.util.FFMPEG;
 import cn.com.sun.ksv.util.FileAccessManager;
 import cn.com.sun.ksv.util.HttpClient;
+import cn.com.sun.ksv.util.ImageHistogram;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -16,6 +17,7 @@ import ws.schild.jave.info.MultimediaInfo;
 import ws.schild.jave.info.VideoSize;
 
 import java.io.File;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -50,6 +52,8 @@ public class ShortVideoCrawler implements VideoCrawler {
 
     private static String regEx = "[0-9]*.mp4";
 
+    private File baseImage;
+
     public ShortVideoCrawler(List<String> urlList) {
         this.urlList = urlList;
         initWebDriver();
@@ -60,6 +64,9 @@ public class ShortVideoCrawler implements VideoCrawler {
         if (!outputDir.exists()) {
             outputDir.mkdirs();
         }
+        // 基准图片
+        URL url = this.getClass().getResource("base.jpg");
+        this.baseImage = new File(url.getFile());
     }
 
     private void initWebDriver() {
@@ -112,9 +119,16 @@ public class ShortVideoCrawler implements VideoCrawler {
                 }
                 driver.get(video.getUrl());
                 boolean videoPresence = false;
+                int tryCount = 0;
                 WebElement videoElement = null;
                 // 循环获取video
                 do {
+                    // 尝试5次
+                    tryCount++;
+                    if (tryCount > 5) {
+                        logger.warn("get {} failed ", video.getUrl());
+                        break;
+                    }
                     try {
                         videoElement = driver.findElement(By.cssSelector("video"));
                         videoPresence = true;
@@ -131,9 +145,9 @@ public class ShortVideoCrawler implements VideoCrawler {
                     if (videoElement != null) {
                         wait.until(attributeToBeNotEmpty(videoElement, "src"));
                         videoUrl = videoElement.getAttribute("src");
-                    }
+                    } else throw new Exception("get video element failed");
                 } catch (Exception e) {
-                    logger.info("获取视频下载地址失败：{}", video.getUrl());
+                    logger.info("获取视频下载地址失败：{} Error: {}", video.getUrl(), e.getMessage());
                 }
                 if (!videoUrl.isEmpty()) {
                     video.setDownloadUrl(videoUrl);
@@ -243,8 +257,19 @@ public class ShortVideoCrawler implements VideoCrawler {
             File source = new File(video.getPath());
             //1.分辨率处理
             MultimediaInfo multimediaInfo = FFMPEG.getVideoInfo(source);
+            // 如果视频小于5s删掉
+            if (multimediaInfo.getDuration() < 5000l) {
+                source.delete();
+                logger.warn("视频{}长度小于5s，删除不予处理", source);
+                continue;
+            }
             VideoSize expectSize = new VideoSize(720, 1280);
             VideoSize actualSize = multimediaInfo.getVideo().getSize();
+            // 实际分辨率太离谱的话直接跳过该视频处理  TODO 横向的的视频添加上下黑框转换成竖向视频
+            if (actualSize.getWidth() > actualSize.getHeight()) {
+                logger.warn("视频{}分辨率异常，删除不予处理", source);
+                continue;
+            }
             if (!expectSize.asEncoderArgument().equals(actualSize.asEncoderArgument())) {
                 String tempPath = getTempPath(source);
                 FFMPEG.resize(source.getAbsolutePath(), expectSize.asEncoderArgument(), tempPath);
@@ -254,6 +279,9 @@ public class ShortVideoCrawler implements VideoCrawler {
             //2.针对抖音视频去水印去片尾处理
             processDouyin(source);
             //3.时长处理
+            if (!source.exists()) {
+                return;
+            }
             MultimediaInfo info = FFMPEG.getVideoInfo(source);
             float actualDuration = (float) info.getDuration() / 1000f;
             if (actualDuration < 12.0f) {
@@ -290,7 +318,31 @@ public class ShortVideoCrawler implements VideoCrawler {
 
     public void processDouyin(File source) {
         MultimediaInfo info = FFMPEG.getVideoInfo(source);
-        String endTime = calEndTime(info.getDuration(), source);
+        // 获取视频结束前2s的画面帧 判断是否有片尾
+        long duration = info.getDuration();
+        String sampleImage = source.getParentFile().getAbsolutePath() + "\\sampleImage.jpg";
+        FFMPEG.getFrame(formatInstant(duration - 2000l), source.getAbsolutePath(), sampleImage);
+        // 判断相似度以判断是否含有抖音专用片尾
+        File sampleImageFile = new File(sampleImage);
+        double similarity = 0;
+        try {
+            similarity = ImageHistogram.getInstance().match(baseImage, sampleImageFile);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        // 删除
+        sampleImageFile.delete();
+        String endTime = null;
+        if (similarity > 0.95d) {
+            // 如果去掉片尾不足5s则删除
+            if (duration < 8500l) {
+                logger.warn("视频{}删除片尾不足5s，删除不予处理", source);
+                return;
+            }
+            // 含有片尾 砍去最后3.5s
+            endTime = formatInstant(duration - 3500);
+        }
+
         try {
             String first = getPartPath(source, "firstPart");
             String second = getPartPath(source, "secondPart");
@@ -327,9 +379,7 @@ public class ShortVideoCrawler implements VideoCrawler {
         return temp.getAbsolutePath();
     }
 
-    private String calEndTime(long total, File source) {
-        // 去除片尾
-        long duration = total - 3500l;
+    private String formatInstant(long duration) {
         StringBuilder endTime = new StringBuilder();
         long mill = duration % 1000;
         long sec;
@@ -343,7 +393,7 @@ public class ShortVideoCrawler implements VideoCrawler {
             sec = duration / 1000;
             endTime.append("00").append(":").append(sec).append(".").append(mill);
         } else {
-            logger.error("video {} duration over 60 min", source);
+            logger.error("duration over 60 min");
         }
         return endTime.toString();
     }
