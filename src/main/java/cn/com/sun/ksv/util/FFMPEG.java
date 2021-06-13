@@ -250,7 +250,6 @@ public class FFMPEG {
         paraList.forEach(parameter -> executor.addArgument(parameter));
         AtomicReference<MultimediaInfo> info = new AtomicReference<>();
         try {
-            executor.execute();
             // 新启一个线程读取
             Thread thread = new Thread(() -> {
                 try {
@@ -262,9 +261,12 @@ public class FFMPEG {
             });
             thread.setName("ffmpeg-info-reader");
             thread.start();
-            // 同步等待任务完成
+            // 确保读取线程先执行
+            Thread.sleep(100);
+            executor.execute();
+            // 确保执行完在关闭
             executor.getProcessExitCode();
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             logger.error(e.getMessage(), e);
         } finally {
             executor.destroy();
