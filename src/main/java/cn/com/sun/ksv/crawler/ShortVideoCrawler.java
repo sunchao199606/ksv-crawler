@@ -17,7 +17,6 @@ import ws.schild.jave.info.MultimediaInfo;
 import ws.schild.jave.info.VideoSize;
 
 import java.io.File;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -65,8 +64,7 @@ public class ShortVideoCrawler implements VideoCrawler {
             outputDir.mkdirs();
         }
         // 基准图片
-        URL url = this.getClass().getResource("base.jpg");
-        this.baseImage = new File(url.getFile());
+        this.baseImage = new File(CrawlerConfig.getProperties("rootDir") + "//base.jpg");
     }
 
     private void initWebDriver() {

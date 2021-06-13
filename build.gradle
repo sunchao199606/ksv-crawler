@@ -50,6 +50,7 @@ task copyBat(type: Copy) {
     from('crawler.bat')
     from('process.bat')
     from('input.txt')
+    from('base.jpg')
     into("${releaseDir}")
 }
 // 确保先打包再copy
