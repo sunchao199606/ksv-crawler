@@ -28,24 +28,7 @@
     </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c3dce469-eceb-4303-a1d1-51c81780f710" name="Default Changelist" comment="忽略输出目录">
-      <change afterPath="$PROJECT_DIR$/.idea/ksv-crawler.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries-with-intellij-classes.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/process.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/webdriver/chromedriver.exe" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/config/config.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/input.txt" beforeDir="false" afterPath="$PROJECT_DIR$/input.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.bat" beforeDir="false" afterPath="$PROJECT_DIR$/crawler.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/cn/com/sun/ksv/crawler/CrawlerRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/cn/com/sun/ksv/crawler/CrawlerRunner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/cn/com/sun/ksv/crawler/ShortVideoCrawler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/cn/com/sun/ksv/crawler/ShortVideoCrawler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/cn/com/sun/ksv/crawler/VideoCrawler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/cn/com/sun/ksv/crawler/VideoCrawler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/logback.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/logback.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/cn/com/sun/ksv/crawler/CrawlerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/cn/com/sun/ksv/crawler/CrawlerTest.java" afterDir="false" />
-    </list>
+    <list default="true" id="c3dce469-eceb-4303-a1d1-51c81780f710" name="Default Changelist" comment="commit workspace.xml" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -127,6 +110,7 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
     <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="GitSEFilterConfiguration">
@@ -399,7 +383,14 @@
       <option name="project" value="LOCAL" />
       <updated>1620394245841</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="commit workspace.xml">
+      <created>1623590255400</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1623590255400</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -438,14 +429,15 @@
     <MESSAGE value="全部依赖rootDir" />
     <MESSAGE value="新增启动脚本" />
     <MESSAGE value="忽略输出目录" />
-    <option name="LAST_COMMIT_MESSAGE" value="忽略输出目录" />
+    <MESSAGE value="commit workspace.xml" />
+    <option name="LAST_COMMIT_MESSAGE" value="commit workspace.xml" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/test/java/cn/com/sun/ksv/crawler/FFMPEGTest.java</url>
-          <line>36</line>
+          <line>89</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
