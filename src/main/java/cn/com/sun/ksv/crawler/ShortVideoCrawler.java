@@ -141,9 +141,14 @@ public class ShortVideoCrawler implements VideoCrawler {
                 } while (!videoPresence);
                 try {
                     if (videoElement != null) {
-                        wait.until(attributeToBeNotEmpty(videoElement, "src"));
-                        videoUrl = videoElement.getAttribute("src");
-                    } else throw new Exception("get video element failed");
+                        WebElement source = videoElement.findElement(By.cssSelector("source"));
+                        if (source != null) {
+                            wait.until(attributeToBeNotEmpty(source, "src"));
+                            videoUrl = source.getAttribute("src");
+                        } else {
+                            throw new Exception("get video element failed : source tag is null ");
+                        }
+                    } else throw new Exception("get video element failed : video tag is null ");
                 } catch (Exception e) {
                     logger.info("获取视频下载地址失败：{} Error: {}", video.getUrl(), e.getMessage());
                 }
