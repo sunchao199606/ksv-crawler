@@ -1,5 +1,3 @@
-build
 .gradle
-log
-jdk64
-output
+.idea
+

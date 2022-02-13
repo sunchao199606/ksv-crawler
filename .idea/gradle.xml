@@ -5,11 +5,13 @@
       <GradleProjectSettings>
         <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="D:/Program/tools/gradle/gradle-5.5" />
-        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="gradleHome" value="$PROJECT_DIR$/../../software/gradle/gradle-6.4.1" />
+        <option name="gradleJvm" value="jdk1.8-32bit" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/ksv-crawler" />
+            <option value="$PROJECT_DIR$/porn-crawler" />
           </set>
         </option>
       </GradleProjectSettings>
