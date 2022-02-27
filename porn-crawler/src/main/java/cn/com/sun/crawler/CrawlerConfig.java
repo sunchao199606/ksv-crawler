@@ -34,7 +34,7 @@ public class CrawlerConfig {
     /**
      * 本机代理端口，若为-1，则不走代理
      */
-    public static final int HTTP_PROXY_PORT = 8975;
+    public static final int HTTP_PROXY_PORT = 58888;
     private static final Logger logger = LoggerFactory.getLogger(CrawlerConfig.class);
     public static String stage = "parseVideoBaseInfo";
     public static String domain;
